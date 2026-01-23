@@ -1,20 +1,24 @@
 # AI Interview Mocker
 
-AI Interview Mocker is a full-stack web application that simulates real interview experiences using **Generative AI**.
-Users can securely log in, enable webcam and microphone, answer AI-generated interview questions, and receive intelligent feedback based on their responses.
+AI Interview Mocker is a full-stack web application that simulates real interview experiences using **Generative AI**.  
+Users can securely log in, enable their webcam and microphone, answer AI-generated interview questions, and receive intelligent feedback based on their responses.
 
 This project is designed for **students, job seekers, and developers** who want realistic interview practice with AI assistance.
+
+---
 
 ## Features
 
 - Secure authentication using **Clerk**
 - Webcam support for interview simulation
-- Voice-based answers using microphone
+- Voice-based answers using a microphone
 - AI-generated interview questions using **Google Gemini**
 - AI feedback and performance analysis
 - Serverless PostgreSQL database using **Neon**
 - Modern UI with **Tailwind CSS + shadcn/ui**
 - Persistent interview history
+
+---
 
 ## Tech Stack
 
@@ -41,11 +45,13 @@ This project is designed for **students, job seekers, and developers** who want 
 - react-webcam
 - react-hook-speech-to-text
 - react-hook-text-to-speech
-- Default browser voice engine(tested in Chrome)
+- Default browser voice engine (tested in Chrome)
 
 ### Authentication
 
 - Clerk
+
+---
 
 ## Prerequisites
 
@@ -56,12 +62,16 @@ This project is designed for **students, job seekers, and developers** who want 
 - A **Clerk** account
 - A **Google Gemini API key**
 
+---
+
 ## Step 1: Clone the Repository
 
 ```bash
-git clone https://github.com/Anindito05/ai-interview-mocker.git
+git clone https://github.com/ImmorTaLRioTZ/ai-interview-mocker.git
 cd ai-interview-mocker
 ```
+
+---
 
 ## Step 2: Install Dependencies
 
@@ -69,13 +79,15 @@ cd ai-interview-mocker
 npm install
 ```
 
+---
+
 ## Step 3: Neon Database Setup
 
-### 3.1 Create Neon Project
+### 3.1 Create a Neon Project
 
-1. Go to [https://neon.tech]
-2. Sign up or log in
-3. Create a new project
+1. Go to https://neon.tech  
+2. Sign up or log in  
+3. Create a new project  
 4. Copy the **PostgreSQL connection string**
 
 Example format:
@@ -84,31 +96,38 @@ Example format:
 postgresql://username:password@host/dbname?sslmode=require
 ```
 
-### 3.2 Initialize Neon in Project
+---
+
+### 3.2 Initialize Neon in the Project
 
 ```bash
 npx neonctl@latest init
 ```
 
+---
+
 ## Step 4: Clerk Authentication Setup
 
-### 4.1 Create Clerk Application
+### 4.1 Create a Clerk Application
 
-1. Visit [https://clerk.dev]
-2. Create a new application
-3. Enable **Email / Password** authentication
+1. Visit https://clerk.dev  
+2. Create a new application  
+3. Enable **Email / Password** authentication  
 4. Copy:
-
    - Publishable Key
    - Secret Key
 
+---
+
 ### 4.2 Configure Clerk URLs
 
-In Clerk Dashboard → **Paths**:
+In the Clerk Dashboard → **Paths**:
 
 - Sign-in URL: `/sign-in`
 - Sign-up URL: `/sign-up`
 - After sign-in redirect: `/`
+
+---
 
 ## Step 5: Create Environment Variables
 
@@ -130,13 +149,15 @@ NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/
 NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/
 
 # UI Text
-NEXT_PUBLIC_INFORMATION=Enable webcam and microphone to start your AI-generated mock interview.
-NEXT_PUBLIC_QUESTION_NOTE=Click on Record Answer to answer each question.
+NEXT_PUBLIC_INFORMATION=Enable the webcam and microphone to start your AI-generated mock interview.
+NEXT_PUBLIC_QUESTION_NOTE=Click on Record Answer to respond to each question.
 ```
+
+---
 
 ## Step 6: Database Schema Setup (Drizzle ORM)
 
-Push schema to Neon database:
+Push the schema to the Neon database:
 
 ```bash
 npm run db:push
@@ -162,9 +183,11 @@ pnpm dev
 bun dev
 ```
 
-Open in browser:
+Open in the browser:
 
-**[http://localhost:3000]**
+**http://localhost:3000**
+
+---
 
 ## Security Notes
 
@@ -178,14 +201,21 @@ Open in browser:
 ## Deployment (Optional)
 
 - Deploy the project on **Vercel**
-- Add all `.env` variables in
+- Add all `.env` variables in  
   **Vercel → Project Settings → Environment Variables**
 - Neon works seamlessly in production
 
 ---
 
-## Author
-**Rabishankar Roy**
-GitHub: [https://github.com/rabishankarroy04-svg]
-**Anindito Patra**
-GitHub: [https://github.com/Anindito05]
+### **Usage Procedure (YouTube Link):**
+https://youtu.be/XuJoHCaMCrE
+
+---
+
+### **Author / Developer:**  
+_Jit Sarkar_
+
+---
+
+## **GitHub:**  
+https://github.com/ImmorTaLRioTZ
