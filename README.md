@@ -213,9 +213,5 @@ https://youtu.be/XuJoHCaMCrE
 ---
 
 ### **Author / Developer:**  
-_Jit Sarkar_
+_Rabishankar Roy_
 
----
-
-## **GitHub:**  
-https://github.com/ImmorTaLRioTZ
