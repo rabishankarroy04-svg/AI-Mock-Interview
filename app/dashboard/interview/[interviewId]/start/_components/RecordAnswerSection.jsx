@@ -1,7 +1,7 @@
 "use client";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"; // Adjust import path if needed
 import React, { useEffect, useRef, useState } from "react";
-import ProctorFaceMonitor from "./ProctorFaceMonitor";
+import Webcam from "react-webcam";
 import { Mic, MicOff, LoaderCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,25 +10,33 @@ const RecordAnswerSection = ({
   savedAnswer,
   onAnswerChange,
 }) => {
-  // Local state for the current question's text
   const [userAnswer, setUserAnswer] = useState(savedAnswer || "");
   const [isRecording, setIsRecording] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
+  const streamRef = useRef(null);
 
-  // RESET LOGIC: This fixes the "shared text" bug
   useEffect(() => {
-    // When the question index changes, load the saved answer for that specific question
     setUserAnswer(savedAnswer || "");
-    // Stop any UI recording state if the user clicks next while recording
-    setIsRecording(false);
+    if (isRecording) stopRecording();
+
+    // Cleanup media streams on unmount
+    return () => stopMediaTracks();
   }, [activeQuestionIndex, savedAnswer]);
+
+  const stopMediaTracks = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+  };
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
       mediaRecorderRef.current = new MediaRecorder(stream);
       chunksRef.current = [];
 
@@ -40,14 +48,15 @@ const RecordAnswerSection = ({
         const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
         await sendForTranscription(audioBlob);
         setIsRecording(false);
+        stopMediaTracks(); // Turn off mic
       };
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
-      toast("Recording started... Speak now.");
+      toast.success("Recording started... Speak now.");
     } catch (err) {
       console.error(err);
-      toast("Microphone access denied. Please check permissions.");
+      toast.error("Microphone access denied. Please check permissions.");
     }
   };
 
@@ -67,42 +76,35 @@ const RecordAnswerSection = ({
         method: "POST",
         body: formData,
       });
-
-      if (!res.ok) throw new Error("Transcription request failed");
+      if (!res.ok) throw new Error("Transcription failed");
 
       const data = await res.json();
       const textResult = data.text || "";
 
-      // Update local state and parent state
       setUserAnswer(textResult);
       onAnswerChange(activeQuestionIndex, textResult);
-
-      toast("Voice transcribed successfully!");
+      toast.success("Voice transcribed successfully!");
     } catch (error) {
       console.error(error);
-      toast("Failed to transcribe audio. You can type your answer instead.");
+      toast.error(
+        "Failed to transcribe audio. You can type your answer instead.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Manual editing handler
-  const handleTextChange = (e) => {
-    const newValue = e.target.value;
-    setUserAnswer(newValue);
-    onAnswerChange(activeQuestionIndex, newValue);
-  };
-
   return (
     <div className="flex flex-col items-center gap-5 border p-5 rounded-xl bg-slate-50 shadow-sm">
-      {/* Webcam Container */}
-      {/* Webcam Container & Proctor */}
-      <div className="w-full max-w-md aspect-video shadow-inner rounded-xl overflow-hidden border border-slate-200 relative">
-        {/* This single component handles BOTH the view and the AI */}
-        <ProctorFaceMonitor className="w-full h-full" />
+      <div className="bg-black p-4 rounded-xl flex justify-center w-full max-w-md shadow-inner">
+        <Webcam
+          mirrored
+          width={400}
+          height={300}
+          videoConstraints={{ facingMode: "user" }}
+        />
       </div>
 
-      {/* Control Button */}
       <Button
         variant={isRecording ? "destructive" : "outline"}
         onClick={isRecording ? stopRecording : startRecording}
@@ -123,7 +125,6 @@ const RecordAnswerSection = ({
         )}
       </Button>
 
-      {/* Answer Area */}
       <div className="flex flex-col gap-2 w-full max-w-md">
         <div className="flex justify-between items-center">
           <label className="text-sm font-bold text-slate-600">
@@ -135,17 +136,15 @@ const RecordAnswerSection = ({
             </span>
           )}
         </div>
-
         <textarea
           className="border border-slate-300 rounded-xl p-4 w-full h-40 outline-none focus:ring-2 focus:ring-blue-500 transition-all text-slate-800 bg-white"
           placeholder="Your transcribed text will appear here. You can also type or edit your answer directly..."
           value={userAnswer}
-          onChange={handleTextChange}
+          onChange={(e) => {
+            setUserAnswer(e.target.value);
+            onAnswerChange(activeQuestionIndex, e.target.value);
+          }}
         />
-        <p className="text-[10px] text-slate-400 italic">
-          *You can record your voice or type your answer manually. Use Prev/Next
-          to save your progress.
-        </p>
       </div>
     </div>
   );
