@@ -7,20 +7,23 @@ export default function ProctorBrowserMonitor() {
   const timerRef = useRef(null);
 
   useEffect(() => {
+    const isFullscreen = () =>
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement;
+
     const checkFullscreen = () => {
-      if (!document.fullscreenElement) {
-        // Immediate deduction on exit
+      if (!isFullscreen()) {
         deduct(2, "Exited fullscreen");
 
-        // Start 10-second penalty if user doesn't restore
         if (!timerRef.current) {
           timerRef.current = setTimeout(() => {
             deduct(2, "Browser not in fullscreen for 10 seconds");
             timerRef.current = null;
-          }, 50000);
+          }, 10000); // Fixed 50000 (50s) to 10000 (10s) to match your comment
         }
       } else {
-        // Clear timer if fullscreen is restored
         if (timerRef.current) {
           clearTimeout(timerRef.current);
           timerRef.current = null;
@@ -38,8 +41,7 @@ export default function ProctorBrowserMonitor() {
     window.addEventListener("blur", onBlur);
     document.addEventListener("fullscreenchange", checkFullscreen);
 
-    // Backup interval check
-    const interval = setInterval(checkFullscreen, 1000);
+    const interval = setInterval(checkFullscreen, 2000); // Polling every 2s to save CPU
 
     return () => {
       document.removeEventListener("visibilitychange", onVisibility);
