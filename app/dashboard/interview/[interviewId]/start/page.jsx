@@ -1,20 +1,24 @@
 "use client";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
 import { LoaderCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-// Existing Components
-import QuestionSection from "./_components/QuestionSection";
-import RecordAnswerSection from "./_components/RecordAnswerSection";
-
-// ✅ NEW: Proctoring Components (Adjust paths if they are in a different folder)
+// --- PROCTOR COMPONENTS ---
 import { ProctorProvider } from "./_components/ProctorContext";
 import ProctorBrowserMonitor from "./_components/ProctorBrowserMonitor";
+import ProctorFaceMonitor from "./_components/ProctorFaceMonitor";
 import ExamTimer from "./_components/ExamTimer";
+// --------------------------
+
+import QuestionSection from "./_components/QuestionSection";
+import RecordAnswerSection from "./_components/RecordAnswerSection";
+import { toast } from "sonner";
 
 export default function StartInterview() {
   const { interviewId } = useParams();
+  const router = useRouter();
+
   const [interviewData, setInterviewData] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [index, setIndex] = useState(0);
@@ -31,6 +35,10 @@ export default function StartInterview() {
             ? JSON.parse(data.jsonMockResp)
             : data.jsonMockResp;
         setQuestions(parsedQuestions);
+      })
+      .catch((err) => {
+        console.error("Failed to load interview:", err);
+        toast.error("Error loading interview data.");
       });
   }, [interviewId]);
 
@@ -41,6 +49,7 @@ export default function StartInterview() {
   const endInterview = async () => {
     setLoading(true);
     try {
+      // Logic: Save all answers to DB
       for (let i = 0; i < questions.length; i++) {
         await fetch("/api/interview/answer", {
           method: "POST",
@@ -54,34 +63,46 @@ export default function StartInterview() {
           }),
         });
       }
-      window.location.href = `/dashboard/interview/${interviewId}/feedback`;
+
+      toast.success("Interview submitted successfully!");
+      // Use router.replace to prevent going back to the start page
+      router.replace(`/dashboard/interview/${interviewId}/feedback`);
     } catch (error) {
       console.error(error);
+      toast.error("An error occurred while saving answers.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (!interviewData) return <div className="p-10 text-center">Loading...</div>;
+  if (!interviewData)
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <LoaderCircle className="animate-spin w-10 h-10 text-primary" />
+        <p className="text-slate-500 font-medium">
+          Initializing secure session...
+        </p>
+      </div>
+    );
 
   return (
-    // ✅ WRAPPER: All proctoring logic must live inside this provider
     <ProctorProvider interviewId={interviewId}>
-      
-      {/* ✅ MONITORING: Detects tab switching & fullscreen exits */}
+      {/* BACKGROUND MONITORS (Non-Visual) */}
       <ProctorBrowserMonitor />
-      
-      {/* ✅ TIMER: Shows countdown & auto-submits on timeout */}
-      <ExamTimer minutes={30} /> 
+      <ProctorFaceMonitor />
 
-      <div className="p-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+      {/* UI ELEMENTS */}
+      <ExamTimer minutes={15} />
+
+      <div className="p-5 md:p-10 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {/* Left: Question List & Current Question */}
           <QuestionSection
             mockInterviewQuestion={questions}
             activeQuestionIndex={index}
           />
-          
-          {/* Now RecordAnswerSection can safely use ProctorFaceMonitor */}
+
+          {/* Right: Camera & Voice Recording */}
           <RecordAnswerSection
             activeQuestionIndex={index}
             savedAnswer={answers[index] || ""}
@@ -89,22 +110,36 @@ export default function StartInterview() {
           />
         </div>
 
-        <div className="flex justify-between mt-10">
-          <Button disabled={index === 0} onClick={() => setIndex(index - 1)}>
+        {/* Navigation Controls */}
+        <div className="flex justify-between items-center mt-12 bg-white p-4 rounded-xl border shadow-sm">
+          <Button
+            variant="outline"
+            disabled={index === 0}
+            onClick={() => setIndex(index - 1)}
+            className="w-32"
+          >
             Previous
           </Button>
+
+          <div className="text-sm font-bold text-slate-400">
+            Question {index + 1} of {questions.length}
+          </div>
+
           {index < questions.length - 1 ? (
-            <Button onClick={() => setIndex(index + 1)}>Next</Button>
+            <Button onClick={() => setIndex(index + 1)} className="w-32">
+              Next
+            </Button>
           ) : (
             <Button
               variant="destructive"
               onClick={endInterview}
               disabled={loading}
+              className="w-40 font-bold"
             >
               {loading ? (
                 <LoaderCircle className="animate-spin" />
               ) : (
-                "End Interview"
+                "Finish Interview"
               )}
             </Button>
           )}
